@@ -65,3 +65,6 @@ _ReSharper*/
 # External folder
 /external/
 /gen/
+
+/src/tests/*/assets_unpacked/*
+/tests/*/assets_unpacked/*
