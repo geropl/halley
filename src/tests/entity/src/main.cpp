@@ -4,7 +4,7 @@
 using namespace Halley;
 
 void initOpenGLPlugin(IPluginRegistry &registry);
-void initSDLSystemPlugin(IPluginRegistry &registry);
+void initSDLSystemPlugin(IPluginRegistry &registry, Maybe<String> cryptKey);
 void initSDLAudioPlugin(IPluginRegistry &registry);
 void initSDLInputPlugin(IPluginRegistry &registry);
 
@@ -33,14 +33,14 @@ class EntityTestGame final : public Game
 public:
 	int initPlugins(IPluginRegistry &registry) override
 	{
-		initSDLSystemPlugin(registry);
+		initSDLSystemPlugin(registry, {});
 		initSDLAudioPlugin(registry);
-		initSDLInputPlugin(registry);
+		//initSDLInputPlugin(registry);
 		initOpenGLPlugin(registry);
 		return HalleyAPIFlags::Video | HalleyAPIFlags::Audio | HalleyAPIFlags::Input;
 	}
 
-	void initResourceLocator(Path dataPath, ResourceLocator& locator) override
+	void initResourceLocator(const Path& dataPath, const Path& assetsPath, const Path& unpackedAssetsPath, ResourceLocator& locator) override
 	{
 		locator.addFileSystem(dataPath);
 	}
@@ -58,7 +58,7 @@ public:
 			return std::unique_ptr<Stage>();
 		}
 	}
-	
+
 	String getName() const override
 	{
 		return "Entity test";
@@ -69,14 +69,14 @@ public:
 		return "halley/entity-test";
 	}
 
-	bool isDevBuild() const override
+	bool isDevMode() const override
 	{
 		return true;
 	}
 
 	std::unique_ptr<Stage> startGame(const HalleyAPI* api) override
 	{
-		api->video->setWindow(WindowDefinition(WindowType::Window, Vector2i(1280, 720), getName()), true);
+		api->video->setWindow(WindowDefinition(WindowType::Window, Vector2i(1280, 720), getName()));
 		return std::make_unique<TestStage>();
 	}
 };

@@ -14,7 +14,7 @@ public:
 		return HalleyAPIFlags::Video | HalleyAPIFlags::Audio | HalleyAPIFlags::Input;
 	}
 
-	void initResourceLocator(Path dataPath, ResourceLocator& locator) override
+	void initResourceLocator(const Path& dataPath, const Path& assetsPath, const Path& unpackedAssetsPath, ResourceLocator& locator) override
 	{
 		locator.addFileSystem(dataPath);
 	}
@@ -29,14 +29,14 @@ public:
 		return "halley/network-test";
 	}
 
-	bool isDevBuild() const override
+	bool isDevMode() const override
 	{
 		return true;
 	}
 
 	std::unique_ptr<Stage> startGame(const HalleyAPI* api) override
 	{
-		api->video->setWindow(WindowDefinition(WindowType::Window, Vector2i(1280, 720), getName()), false);
+		api->video->setWindow(WindowDefinition(WindowType::Window, Vector2i(1280, 720), getName()));
 		return std::make_unique<TestStage>();
 	}
 };

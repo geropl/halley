@@ -9,9 +9,10 @@ using namespace Halley;
 class NoOpMsg : public NetworkMessage
 {
 public:
-	size_t getSerializedSize() const override { return 0; }	
-	void serializeTo(gsl::span<gsl::byte> /*dst*/) const override {}	
-	void deserializeFrom(gsl::span<const gsl::byte> /*src*/) override {}
+    NoOpMsg(gsl::span<const gsl::byte> /*src*/) {}
+
+	size_t getSerializedSize() const { return 0; }
+    void serialize(Serializer& s) const override {}
 };
 
 class TextMsg : public NetworkMessage
@@ -24,22 +25,22 @@ public:
 		: str(str)
 	{}
 
-	String getString() const { return str; }
-
-	size_t getSerializedSize() const override
-	{
-		return str.size();
-	}
-	
-	void serializeTo(gsl::span<gsl::byte> dst) const override
-	{
-		memcpy(dst.data(), str.c_str(), str.size());
-	}
-	
-	void deserializeFrom(gsl::span<const gsl::byte> src) override
+	TextMsg(gsl::span<const gsl::byte> src)
 	{
 		str = String(reinterpret_cast<const char*>(src.data()), src.size());
 	}
+
+	String getString() const { return str; }
+
+	size_t getSerializedSize() const
+	{
+		return str.size();
+	}
+
+    void serialize(Serializer& s) const override
+    {
+        s << str;
+    }
 
 private:
 	String str;
@@ -81,15 +82,15 @@ void TestStage::updateNetwork()
 		if (key->isButtonPressed(Keys::S)) {
 			// Server
 			isClient = false;
-			network = getNetworkAPI().createService(4113);
+			network = getNetworkAPI().createService(NetworkProtocol::TCP, 4113);
 			network->setAcceptingConnections(true);
 			std::cout << "Listening..." << std::endl;
 		}
 		else if (key->isButtonPressed(Keys::C)) {
 			// Client
 			isClient = true;
-			network = getNetworkAPI().createService(0);
-			setConnection(network->connect("127.0.0.1", 4113));			
+			network = getNetworkAPI().createService(NetworkProtocol::TCP, 0);
+			setConnection(network->connect("127.0.0.1", 4113));
 			std::cout << "Connecting as client." << std::endl;
 		}
 	} else {
@@ -108,8 +109,8 @@ void TestStage::updateNetwork()
 					connection->close();
 				}
 			}
-			
-			if (connection->getStatus() == ConnectionStatus::Open) {
+
+			if (connection->getStatus() == ConnectionStatus::Connected) {
 				if (key->isButtonPressed(Keys::Space)) {
 					msgs->enqueue(std::make_unique<TextMsg>("ding"), 1);
 				}
@@ -151,7 +152,7 @@ void TestStage::setConnection(std::shared_ptr<Halley::IConnection> conn)
 	const bool unstable = true;
 	auto base = unstable ? std::make_shared<InstabilitySimulator>(conn, 0.1f, 0.03f, 0.1f, 0.05f) : conn;
 	connection = std::make_shared<ReliableConnection>(base);
-	
+
 	msgs = std::make_unique<MessageQueue>(connection);
 	msgs->setChannel(0, ChannelSettings(false, false, false));
 	msgs->setChannel(1, ChannelSettings(true, false, false));
