@@ -1,0 +1,26 @@
+image:
+  file: gitpod.Dockerfile
+ports:
+- port: 6080
+  onOpen: 'open-preview'
+- port: 5090
+  onOpen: ignore
+tasks:
+- init: >
+        rm -Rf build
+        && mkdir build
+        && (
+        cd build
+        && cmake
+        -DBUILD_HALLEY_TOOLS=1
+        -DBUILD_HALLEY_TESTS=1
+        -DBOOST_ROOT=/home/gitpod/boost/boost_1_66_0
+        -DCMAKE_LIBRARY_PATH=/home/gitpod/boost/boost_1_66_0/stage/lib/
+        -DYAMLCPP_INCLUDE_DIR=/home/gitpod/yaml-cpp/yaml-cpp/include/
+        -DYAMLCPP_LIBRARY=/home/gitpod/yaml-cpp/yaml-cpp/build/libyaml-cpp.a ..
+        && make -j 4
+        )
+  command: ./bin/halley-editor tests/entity
+- command: jwm
+  name: Window Manager
+  openMode: tab-before
